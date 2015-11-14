@@ -1,0 +1,5 @@
+---
+spark_install_directory: /opt/software/spark/
+spark_log_location: /var/log/spark
+spark_version: HEAD 
+

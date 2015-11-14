@@ -1,0 +1,67 @@
+- name: install zookeeper python and ruby (for KafkaT)
+  action: apt update_cache=yes name={{ item }}
+  with_items:
+    - build-essential
+    - git
+    - python-dev
+    - python-pip
+    - ruby 
+    - ruby-dev 
+    - supervisor
+    - zookeeperd
+
+- name: install pip packages
+  pip:
+    name: "{{ item }}"
+    extra_args: --upgrade
+  with_items:
+    - pykafka
+    - requests
+    - nltk
+
+- name: disable swap
+  shell: "swapoff ~/swapfile"
+  ignore_errors: yes
+
+- name: set 4gb swap
+  shell: fallocate -l 4G ~/swapfile
+
+- name: chmod/chown/chgrp the swap 
+  file: path=~/swapfile owner=root group=root mode=0600
+
+- name: make the swap file
+  shell: "mkswap ~/swapfile"
+
+- name: enable swap
+  shell: "swapon ~/swapfile"
+
+- name: Make kafka directories 
+  file: path={{ item }} state=directory mode=0755
+  with_items:
+    - "{{ kafka_install_directory }}"
+    - "{{ kafka_log_location }}"
+
+- name: download kafka  
+  get_url: url="{{ kafka_binary_url }}" dest="{{ kafka_download_location }}"
+
+- name: Extract kafka tar file
+  unarchive:
+    src: "{{ kafka_download_location }}"
+    dest: "{{ kafka_install_directory }}"
+    copy: no
+
+- name: Symlink Kafka version as current
+  file: src={{ kafka_install_directory }}/kafka_2.11-0.8.2.1 dest={{ kafka_install_directory }}/current state=link
+
+- name: override kafka server.properties file 
+  template: src=server.properties.j2 dest={{ kafka_install_directory }}/current/config/server.properties mode=0644
+
+- name: override ~/.kafkatcfg for kafkacat  
+  template: src=kafkatcfg.j2 dest=~/.kafkatcfg mode=0644
+
+- name: start kafka 
+  shell: "nohup {{ kafka_install_directory}}/current/bin/kafka-server-start.sh {{ kafka_install_directory}}/current/config/server.properties > {{ kafka_install_directory}}/current/kafka.log 2>&1 &"
+
+- name: install KafkaT
+  shell: "gem install kafkat --source https://rubygems.org --no-ri --no-rdoc"
+

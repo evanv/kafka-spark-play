@@ -1,0 +1,16 @@
+---
+kafka_binary_url: http://mirror.cc.columbia.edu/pub/software/apache/kafka/0.8.2.1/kafka_2.11-0.8.2.1.tgz
+kafka_download_location: /tmp/kafka.tgz
+kafka_install_directory: /opt/software/kafka
+kafka_version: kafka_2.11-0.8.2.1
+kafka_log_location: /var/log/kafka/
+kafka_host: localhost
+kafka_port: 9042
+kafka_network_threads: 3
+kafka_disk_io_threads: 10
+kafka_num_partitions: 5
+kafka_flush_interval_messages: 1000
+kafka_flush_interval_ms: 1000
+kafka_log_retention_hours: 168
+zk_path: localhost:2181
+

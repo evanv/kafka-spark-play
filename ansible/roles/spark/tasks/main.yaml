@@ -1,0 +1,45 @@
+- name: Install add-apt-repostory
+  apt: name=software-properties-common state=latest
+  sudo: yes
+
+- name: Add Maven Repository
+  apt_repository: repo='ppa:andrei-pozolotin/maven3'
+  sudo: yes
+
+- name: install apt deps 
+  action: apt update_cache=yes name={{ item }}
+  with_items:
+    - git
+    - maven3
+    - python-dev
+    - python-pip
+    - supervisor
+
+- name: install pip packages
+  pip:
+    name: "{{ item }}"
+    extra_args: --upgrade
+  with_items:
+    - pykafka
+    - requests
+
+- name: Reduce swappiness
+  sysctl: name=vm.swappiness value=5 state=present
+
+- name: Make spark directories 
+  file: path={{ item }} state=directory mode=0755
+  with_items:
+    - "{{ spark_install_directory }}"
+    - "{{ spark_log_location }}"
+
+- name: clone spark 
+  git: 
+      repo: "https://github.com/apache/spark.git"
+      dest: "{{ spark_install_directory }}"
+      version: "{{ spark_version }}"
+
+- name: build spark
+  shell: "cd {{ spark_install_directory }} && mvn -Phadoop-2.4 -Dhadoop.version=2.4.0 -DskipTests clean package"
+
+
+
